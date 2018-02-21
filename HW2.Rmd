@@ -1,0 +1,147 @@
+---
+title: "Homework 2"
+author: "Rosemary Kinuthia"
+date: "2/20/2018"
+output: html_document
+---
+
+```{r setup}
+knitr::opts_chunk$set(echo = TRUE)
+library(car)
+library(tidyverse)
+```
+#Question 1: What kind of R object is the Davis dataset?
+```{r}
+#Load Davis dataset
+dataDavis <-car::Davis
+```
+
+```{r}
+#Look at type of object
+class(dataDavis)
+```
+#Question 2: How many observations are in the Davis dataset?
+```{r}
+#Summary of Data
+summary(dataDavis)
+```
+#Question 3: For reported weight, how many observations have a missing value?
+```{r}
+#Complete cases
+completeObs <- complete.cases(dataDavis)
+table(completeObs)
+```
+#Question 4: How many observations have no missing values? 
+```{r}
+#Keep only the complete data
+dataComplete <- dataDavis %>%
+  filter(complete.cases(.))
+```
+#Question 5: How many females are in this subset?
+```{r}
+#Create subset containing only sex
+dataDavis_subset <- select(dataDavis, 
+                           sex)
+dim(dataDavis_subset)
+```
+
+```{r}
+#Create subset containing only females
+Female_subset <- filter(dataDavis_subset, 
+                    sex == "F")
+dim(Female_subset)
+```
+#Question 6: What is the average BMI for these individuals?
+```{r}
+#Compute a new variable (Height in Meters)
+dataDavis <-dataDavis %>%
+  mutate(HeightMeters= height/100)
+```
+
+```{r}
+#Compute a new variable (Height in Meters Squared)
+dataDavis <- dataDavis%>%
+  mutate(HeightMeters_Squared= HeightMeters*HeightMeters)
+```
+
+```{r}
+#Create a new variable (BMI)
+dataDavis <- dataDavis%>%
+  mutate(BMI=weight/HeightMeters_Squared)
+```
+
+```{r}
+#Calculate average BMI (Look at summary statistics)
+summary(dataDavis)
+#Mean BMI is 24.7
+```
+#Question 7: How do these individuals fall into the BMI categories (what are the frequencies and relative %’s)?
+```{r}
+#Recode data
+dataDavis <- dataDavis %>%
+  mutate(BMIcat = if_else (BMI<18.5, "1. Underweight",
+                  if_else (BMI<25, 
+                          "2. Normal",
+                  if_else (BMI<30,  
+                          "3. Overweight",
+                          "4. Obese"),
+                  "4. missing")))
+```
+
+```{r}
+#Count the number of individuals that fall into the BMI categories 
+dataDavis %>%
+  count(BMIcat)
+```
+
+```{r}
+#Formatted table of contents
+library(janitor)
+dataDavis %>%
+  janitor::tabyl(BMIcat) 
+
+dataDavis %>%
+  janitor::tabyl(BMIcat) %>%
+  knitr::kable()
+```
+#Question 8: Create a histogram of BMI.
+```{r}
+#Histogram of BMI
+dataDavis%>%
+  ggplot()+
+  geom_histogram(aes(BMI))+
+  ggtitle("Histogram of BMI Data in Davis Dataset")
+#I noticed that there is an outlier of BMI around 500. I will delete the outlier below.
+```
+
+```{r}
+#Remove outlier (BMI of 500)
+dataDavis_OutlierDeleted <- dataDavis %>%
+  filter (BMI<100)
+dim(dataDavis_OutlierDeleted)
+```
+
+```{r}
+#New histogram of BMI with outlier removed
+dataDavis_OutlierDeleted%>%
+  ggplot()+
+  geom_histogram(aes(BMI))+
+  ggtitle("Histogram of BMI Data in Davis Dataset")
+#After deleting the outlier I noticed that the distribution is skewed to the right. 
+```
+#Question 9: Create side-by-side boxplots of the BMI distributions by gender
+```{r}
+#Side-by-side boxplots of the BMI distribution by gender
+ggplot(dataDavis_OutlierDeleted, 
+       aes(x=sex, y=BMI, fill=sex)) + 
+  geom_boxplot()
+```
+#Question 10: Create a clustered bar chart of the BMI categories by gender
+```{r}
+#Clustered barchart of the BMI categories by gender
+dataDavis_OutlierDeleted %>% ggplot(aes(x=BMIcat, fill=sex)) +
+  geom_bar(position = "dodge")
+```
+
+##The link to this assignment can be found at [https://github.com/RosemaryKinuthia/N741Homework2.git] (https://github.com/RosemaryKinuthia/N741Homework2.git)
+
